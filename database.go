@@ -1,18 +1,15 @@
 package main
 
 import (
-	"database/sql"
-	"os"
-	"path/filepath"
-
 	"github.com/sirupsen/logrus"
 )
 
+/*
 var (
 	db *sql.DB
 )
 
-func createDB() {
+func GetDB() *sql.DB {
 	appPath, err := os.Executable()
 	if err != nil {
 		logrus.Fatal(err)
@@ -26,19 +23,19 @@ func createDB() {
 		install = true
 	}
 
-	if install {
-		db, err := sql.Open("sqlite3", dbFile)
-		if err != nil {
-			logrus.Fatal(err)
-		}
+	db, err = sql.Open("sqlite3", dbFile)
+	if err != nil {
+		logrus.Fatal(err)
+	}
 
+	if install {
 		_, err = db.Exec(`CREATE TABLE IF NOT EXISTS scheduler (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			date VARCHAR(8),
-			title VARCHAR(255) NOT NULL,
-			comment TEXT,
-			repeat VARCHAR(255)
-		);`)
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		date VARCHAR(8),
+		title VARCHAR(255) NOT NULL,
+		comment TEXT,
+		repeat VARCHAR(255)
+	);`)
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -46,6 +43,17 @@ func createDB() {
 		_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_scheduler_date ON scheduler (date);`)
 		if err != nil {
 			logrus.Fatal(err)
+		}
+	}
+	return db
+}
+*/
+
+func CloseDB() {
+	if db != nil {
+		err := db.Close()
+		if err != nil {
+			logrus.Fatalf("db close error: %v", err)
 		}
 	}
 }

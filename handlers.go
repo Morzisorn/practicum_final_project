@@ -61,6 +61,60 @@ func startServer() {
 
 	})
 
+	app.Get("/api/tasks", func(c *fiber.Ctx) error {
+		search := c.Query("search")
+		tasks, err := UpcomingTasks(search)
+		if err != nil {
+			return c.JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		result := make([]map[string]string, len(tasks))
+		for i, task := range tasks {
+			result[i] = map[string]string{
+				"id":      fmt.Sprintf("%d", task.ID),
+				"date":    task.Date,
+				"title":   task.Title,
+				"comment": task.Comment,
+				"repeat":  task.Repeat,
+			}
+		}
+		fmt.Println(result)
+
+		return c.JSON(fiber.Map{
+			"tasks": tasks,
+		})
+
+	})
+
+	app.Post("/api/task", func(c *fiber.Ctx) error {
+		var req Task
+		if err := c.BodyParser(&req); err != nil {
+			c.JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		if req.Comment == "" {
+			req.Comment = ""
+		}
+
+		if req.Repeat == "" {
+			req.Repeat = ""
+		}
+
+		id, err := AddTask(req.Date, req.Title, req.Comment, req.Repeat)
+		if err != nil {
+			return c.JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"id": id,
+		})
+	})
+
 	port := os.Getenv("TODO_PORT")
 
 	logrus.Fatal(app.Listen(fmt.Sprintf(":%s", port)))

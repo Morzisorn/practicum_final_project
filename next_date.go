@@ -218,10 +218,19 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 
 	switch repeat[0] {
 	case 'd':
+		if len(repeat) < 3 {
+			return "", fmt.Errorf("repeat is invalid")
+		}
 		return nextDateDay(now, nextDate, repeat)
 	case 'w':
+		if len(repeat) < 3 {
+			return "", fmt.Errorf("repeat is invalid")
+		}
 		return nextDateWeek(now, nextDate, repeat)
 	case 'm':
+		if len(repeat) < 3 {
+			return "", fmt.Errorf("repeat is invalid")
+		}
 		return nextDateMonth(now, nextDate, repeat)
 	case 'y':
 		return nextDateYear(now, nextDate)
