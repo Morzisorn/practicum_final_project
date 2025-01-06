@@ -72,7 +72,7 @@ func startServer() {
 		result := make([]map[string]string, len(tasks))
 		for i, task := range tasks {
 			result[i] = map[string]string{
-				"id":      fmt.Sprintf("%d", task.ID),
+				"id":      task.ID,
 				"date":    task.Date,
 				"title":   task.Title,
 				"comment": task.Comment,
@@ -84,7 +84,45 @@ func startServer() {
 		return c.JSON(fiber.Map{
 			"tasks": tasks,
 		})
+	})
 
+	app.Get("/api/task", func(c *fiber.Ctx) error {
+		task, err := GetTask(c.Query("id"))
+		if err != nil {
+			return c.JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		return c.JSON(task)
+	})
+
+	app.Put("/api/task", func(c *fiber.Ctx) error {
+		var req Task
+		if err := c.BodyParser(&req); err != nil {
+			c.JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		if req.ID == "" {
+			return c.JSON(fiber.Map{
+				"error": "id is empty",
+			})
+		}
+		if req.Comment == "" {
+			req.Comment = ""
+		}
+
+		if req.Repeat == "" {
+			req.Repeat = ""
+		}
+
+		err := UpdateTask(req.ID, req.Date, req.Title, req.Comment, req.Repeat)
+		if err != nil {
+			return c.JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		return c.JSON(fiber.Map{})
 	})
 
 	app.Post("/api/task", func(c *fiber.Ctx) error {
@@ -109,7 +147,6 @@ func startServer() {
 				"error": err.Error(),
 			})
 		}
-
 		return c.JSON(fiber.Map{
 			"id": id,
 		})

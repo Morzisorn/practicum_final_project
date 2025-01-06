@@ -16,35 +16,43 @@ type (
 	}
 )
 
-func AddTask(date, title, comment, repeat string) (int64, error) {
-	if date == "" {
-		date = time.Now().Format("20060102")
+func CheckDateAndRepeat(date *string, repeat string) error {
+	if *date == "" {
+		*date = time.Now().Format("20060102")
 	} else {
-		dateTime, err := time.Parse("20060102", date)
+		dateTime, err := time.Parse("20060102", *date)
 		if err != nil {
-			return 0, fmt.Errorf("date is invalid")
+			return fmt.Errorf("date is invalid")
 		}
 		if dateTime.Before(time.Now()) && repeat == "" {
-			date = time.Now().Format("20060102")
+			*date = time.Now().Format("20060102")
 		}
 	}
 	if repeat != "" {
 		var err error
-		date, err = NextDate(time.Now(), date, repeat)
+		*date, err = NextDate(time.Now(), *date, repeat)
 		if err != nil {
-			return 0, fmt.Errorf("repeat is invalid")
+			return fmt.Errorf("repeat is invalid")
 		}
+	}
+	return nil
+}
+
+func AddTask(date, title, comment, repeat string) (int64, error) {
+	err := CheckDateAndRepeat(&date, repeat)
+	if err != nil {
+		return 0, err
 	}
 
 	if title == "" {
 		return 0, fmt.Errorf("title is empty")
 	}
+
 	var id int
-	//db := GetDB()
 	if db == nil {
 		return 0, fmt.Errorf("db is nil")
 	}
-	err := db.QueryRowContext(context.Background(), "INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?) RETURNING id", date, title, comment, repeat).Scan(&id)
+	err = db.QueryRowContext(context.Background(), "INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?) RETURNING id", date, title, comment, repeat).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -86,4 +94,39 @@ func getTasksFromDB(query string, args ...interface{}) ([]Task, error) {
 		tasks = append(tasks, task)
 	}
 	return tasks, nil
+}
+
+func GetTask(id string) (Task, error) {
+	var task Task
+	err := db.QueryRow("SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?", id).Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat)
+	if err != nil {
+		return Task{}, err
+	}
+	return task, nil
+}
+
+func UpdateTask(id, date, title, comment, repeat string) error {
+	err := CheckDateAndRepeat(&date, repeat)
+	if err != nil {
+		return err
+	}
+
+	if title == "" {
+		return fmt.Errorf("title is empty")
+	}
+
+	res, err := db.Exec("UPDATE scheduler SET date = ?, title = ?, comment = ?, repeat = ? WHERE id = ?", date, title, comment, repeat, id)
+	if err != nil {
+		return err
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return fmt.Errorf("task not found")
+	}
+
+	return nil
 }
