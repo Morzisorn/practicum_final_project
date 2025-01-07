@@ -211,6 +211,10 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 		return "", fmt.Errorf("repeat is empty")
 	}
 
+	//if date == now.Format("20060102") && repeat == "d 1" {
+	//	return date, nil
+	//}
+
 	nextDate, err := time.Parse("20060102", date)
 	if err != nil {
 		return "", fmt.Errorf("date is invalid")

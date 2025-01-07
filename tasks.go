@@ -28,13 +28,7 @@ func CheckDateAndRepeat(date *string, repeat string) error {
 			*date = time.Now().Format("20060102")
 		}
 	}
-	if repeat != "" {
-		var err error
-		*date, err = NextDate(time.Now(), *date, repeat)
-		if err != nil {
-			return fmt.Errorf("repeat is invalid")
-		}
-	}
+
 	return nil
 }
 
@@ -42,6 +36,14 @@ func AddTask(date, title, comment, repeat string) (int64, error) {
 	err := CheckDateAndRepeat(&date, repeat)
 	if err != nil {
 		return 0, err
+	}
+
+	if repeat != "" && date != time.Now().Format("20060102") {
+		var err error
+		date, err = NextDate(time.Now(), date, repeat)
+		if err != nil {
+			return 0, fmt.Errorf("repeat is invalid")
+		}
 	}
 
 	if title == "" {
@@ -111,6 +113,14 @@ func UpdateTask(id, date, title, comment, repeat string) error {
 		return err
 	}
 
+	if repeat != "" {
+		var err error
+		date, err = NextDate(time.Now(), date, repeat)
+		if err != nil {
+			return fmt.Errorf("repeat is invalid")
+		}
+	}
+
 	if title == "" {
 		return fmt.Errorf("title is empty")
 	}
@@ -128,5 +138,40 @@ func UpdateTask(id, date, title, comment, repeat string) error {
 		return fmt.Errorf("task not found")
 	}
 
+	return nil
+}
+
+func DoneTask(id string) error {
+	task, err := GetTask(id)
+	if err != nil {
+		return err
+	}
+	if task.Repeat == "" {
+		_, err := db.Exec("DELETE FROM scheduler WHERE id = ?", id)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	err = UpdateTask(id, task.Date, task.Title, task.Comment, task.Repeat)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteTask(id string) error {
+	res, err := db.Exec("DELETE FROM scheduler WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return fmt.Errorf("task not found")
+	}
 	return nil
 }

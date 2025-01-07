@@ -147,11 +147,9 @@ func TestAddTask(t *testing.T) {
 				t.Errorf("Дата не может быть меньше сегодняшней %v", v)
 				continue
 			}
-			/* по условию дата задачи болжна быть больше сегодняшней
 			if today && task.Date != now.Format(`20060102`) {
 				t.Errorf("Дата должна быть сегодняшняя %v", v)
 			}
-			*/
 		}
 	}
 

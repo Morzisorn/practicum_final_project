@@ -18,7 +18,7 @@ func startServer() {
 
 	app.Use(recover.New())
 
-	app.Get("/", func(c *fiber.Ctx) error {
+	app.Get("/index.html", func(c *fiber.Ctx) error {
 		return c.SendFile("./web/index.html")
 	})
 
@@ -79,7 +79,6 @@ func startServer() {
 				"repeat":  task.Repeat,
 			}
 		}
-		fmt.Println(result)
 
 		return c.JSON(fiber.Map{
 			"tasks": tasks,
@@ -150,6 +149,38 @@ func startServer() {
 		return c.JSON(fiber.Map{
 			"id": id,
 		})
+	})
+
+	app.Post("/api/task/done", func(c *fiber.Ctx) error {
+		id := c.Query("id")
+		if id == "" {
+			return c.JSON(fiber.Map{
+				"error": "id is empty",
+			})
+		}
+		err := DoneTask(id)
+		if err != nil {
+			return c.JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		return c.JSON(fiber.Map{})
+	})
+
+	app.Delete("/api/task", func(c *fiber.Ctx) error {
+		id := c.Query("id")
+		if id == "" {
+			return c.JSON(fiber.Map{
+				"error": "id is empty",
+			})
+		}
+		err := DeleteTask(id)
+		if err != nil {
+			return c.JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		return c.JSON(fiber.Map{})
 	})
 
 	port := os.Getenv("TODO_PORT")
