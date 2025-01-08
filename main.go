@@ -1,34 +1,77 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
+	"os"
+	"time"
 
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
 )
 
-var (
-	db *sql.DB
-)
+func startServer() {
+	app := fiber.New(fiber.Config{
+		ReadTimeout:  600 * time.Second,
+		WriteTimeout: 600 * time.Second,
+	})
 
-func createDBTables() {
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS scheduler (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		date VARCHAR(8),
-		title VARCHAR(255) NOT NULL,
-		comment TEXT,
-		repeat VARCHAR(255)
-	);`)
-	if err != nil {
-		logrus.Fatal(err)
-	}
+	app.Use(recover.New())
 
-	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_scheduler_date ON scheduler (date);`)
-	if err != nil {
-		logrus.Fatal(err)
-	}
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendFile("./web/index.html")
+	})
+
+	app.Get("/index.html", func(c *fiber.Ctx) error {
+		return c.SendFile("./web/index.html")
+	})
+
+	app.Get("/login.html", func(c *fiber.Ctx) error {
+		return c.SendFile("./web/login.html")
+	})
+
+	app.Get("/js/axios.min.js", func(c *fiber.Ctx) error {
+		return c.SendFile("./web/js/axios.min.js")
+	})
+
+	app.Get("/js/scripts.min.js", func(c *fiber.Ctx) error {
+		return c.SendFile("./web/js/scripts.min.js")
+	})
+
+	app.Get("/css/style.css", func(c *fiber.Ctx) error {
+		return c.SendFile("./web/css/style.css")
+	})
+
+	app.Get("/css/theme.css", func(c *fiber.Ctx) error {
+		return c.SendFile("./web/css/theme.css")
+	})
+
+	app.Get("/favicon.ico", func(c *fiber.Ctx) error {
+		return c.SendFile("./web/favicon.ico")
+	})
+
+	app.Get("/api/nextdate", handleNextDate)
+
+	app.Get("/api/tasks", auth, handleGetTasks)
+
+	app.Get("/api/task", auth, handleGetTask)
+
+	app.Put("/api/task", auth, handleUpdateTask)
+
+	app.Post("/api/task", auth, handleAddTask)
+
+	app.Post("/api/task/done", auth, handleDoneTask)
+
+	app.Post("/api/signin", handleSignIn)
+
+	app.Delete("/api/task", auth, handleDeleteTask)
+
+	port := os.Getenv("TODO_PORT")
+
+	logrus.Fatal(app.Listen(fmt.Sprintf(":%s", port)))
+
 }
 
 func main() {
