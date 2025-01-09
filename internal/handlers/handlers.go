@@ -1,19 +1,20 @@
-package main
+package handlers
 
 import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/morzisorn/practicum_final_project/internal/logic"
 )
 
-func handleNextDate(c *fiber.Ctx) error {
-	now, err := time.Parse("20060102", c.Query("now"))
+func HandleNextDate(c *fiber.Ctx) error {
+	now, err := time.Parse(logic.DateFormat, c.Query("now"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("now is invalid")
 	}
 	date := c.Query("date")
 	repeat := c.Query("repeat")
-	nextDate, err := NextDate(now, date, repeat)
+	nextDate, err := logic.NextDate(now, date, repeat)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
@@ -21,23 +22,13 @@ func handleNextDate(c *fiber.Ctx) error {
 
 }
 
-func handleGetTasks(c *fiber.Ctx) error {
+func HandleGetTasks(c *fiber.Ctx) error {
 	search := c.Query("search")
-	tasks, err := UpcomingTasks(search)
+	tasks, err := logic.UpcomingTasks(search)
 	if err != nil {
 		return c.JSON(fiber.Map{
 			"error": err.Error(),
 		})
-	}
-	result := make([]map[string]string, len(tasks))
-	for i, task := range tasks {
-		result[i] = map[string]string{
-			"id":      task.ID,
-			"date":    task.Date,
-			"title":   task.Title,
-			"comment": task.Comment,
-			"repeat":  task.Repeat,
-		}
 	}
 
 	return c.JSON(fiber.Map{
@@ -45,8 +36,8 @@ func handleGetTasks(c *fiber.Ctx) error {
 	})
 }
 
-func handleGetTask(c *fiber.Ctx) error {
-	task, err := GetTask(c.Query("id"))
+func HandleGetTask(c *fiber.Ctx) error {
+	task, err := logic.GetTask(c.Query("id"))
 	if err != nil {
 		return c.JSON(fiber.Map{
 			"error": err.Error(),
@@ -55,8 +46,8 @@ func handleGetTask(c *fiber.Ctx) error {
 	return c.JSON(task)
 }
 
-func handleUpdateTask(c *fiber.Ctx) error {
-	var req Task
+func HandleUpdateTask(c *fiber.Ctx) error {
+	var req logic.Task
 	if err := c.BodyParser(&req); err != nil {
 		c.JSON(fiber.Map{
 			"error": err.Error(),
@@ -75,7 +66,7 @@ func handleUpdateTask(c *fiber.Ctx) error {
 		req.Repeat = ""
 	}
 
-	err := UpdateTask(req.ID, req.Date, req.Title, req.Comment, req.Repeat)
+	err := logic.UpdateTask(req.ID, req.Date, req.Title, req.Comment, req.Repeat)
 	if err != nil {
 		return c.JSON(fiber.Map{
 			"error": err.Error(),
@@ -84,8 +75,8 @@ func handleUpdateTask(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{})
 }
 
-func handleAddTask(c *fiber.Ctx) error {
-	var req Task
+func HandleAddTask(c *fiber.Ctx) error {
+	var req logic.Task
 	if err := c.BodyParser(&req); err != nil {
 		c.JSON(fiber.Map{
 			"error": err.Error(),
@@ -100,7 +91,7 @@ func handleAddTask(c *fiber.Ctx) error {
 		req.Repeat = ""
 	}
 
-	id, err := AddTask(req.Date, req.Title, req.Comment, req.Repeat)
+	id, err := logic.AddTask(req.Date, req.Title, req.Comment, req.Repeat)
 	if err != nil {
 		return c.JSON(fiber.Map{
 			"error": err.Error(),
@@ -111,14 +102,14 @@ func handleAddTask(c *fiber.Ctx) error {
 	})
 }
 
-func handleDoneTask(c *fiber.Ctx) error {
+func HandleDoneTask(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
 		return c.JSON(fiber.Map{
 			"error": "id is empty",
 		})
 	}
-	err := DoneTask(id)
+	err := logic.DoneTask(id)
 	if err != nil {
 		return c.JSON(fiber.Map{
 			"error": err.Error(),
@@ -127,7 +118,7 @@ func handleDoneTask(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{})
 }
 
-func handleSignIn(c *fiber.Ctx) error {
+func HandleSignIn(c *fiber.Ctx) error {
 	var req struct {
 		Password string `json:"password"`
 	}
@@ -136,7 +127,7 @@ func handleSignIn(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
-	token, err := getToken(req.Password)
+	token, err := logic.GetToken(req.Password)
 	if err != nil {
 		return c.JSON(fiber.Map{
 			"error": "password is invalid",
@@ -148,14 +139,14 @@ func handleSignIn(c *fiber.Ctx) error {
 	})
 }
 
-func handleDeleteTask(c *fiber.Ctx) error {
+func HandleDeleteTask(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
 		return c.JSON(fiber.Map{
 			"error": "id is empty",
 		})
 	}
-	err := DeleteTask(id)
+	err := logic.DeleteTask(id)
 	if err != nil {
 		return c.JSON(fiber.Map{
 			"error": err.Error(),

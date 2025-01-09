@@ -1,4 +1,4 @@
-package main
+package logic
 
 import (
 	"crypto/sha256"
@@ -8,17 +8,17 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt"
+	"github.com/morzisorn/practicum_final_project/config"
 )
 
-func getToken(password string) (string, error) {
-	realPass := os.Getenv("TODO_PASSWORD")
-	if password != realPass {
+func GetToken(password string) (string, error) {
+	if password != config.RealPass {
 		return "", fmt.Errorf("incorrect password")
 	}
 
-	secretKey := []byte(realPass)
+	secretKey := []byte(config.RealPass)
 
-	hash := sha256.Sum256([]byte(realPass))
+	hash := sha256.Sum256([]byte(config.RealPass))
 	hashString := hex.EncodeToString(hash[:])
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -54,7 +54,7 @@ func isTokenValid(tokenString string) bool {
 	return true
 }
 
-func auth(c *fiber.Ctx) error {
+func Auth(c *fiber.Ctx) error {
 	pass := os.Getenv("TODO_PASSWORD")
 	if len(pass) == 0 {
 		fmt.Println("Password not set")

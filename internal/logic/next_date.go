@@ -1,4 +1,4 @@
-package main
+package logic
 
 import (
 	"fmt"
@@ -63,7 +63,7 @@ func nextDateDay(now, nextDate time.Time, repeat string) (string, error) {
 	if count == 0 {
 		nextDate = nextDate.AddDate(0, 0, step)
 	}
-	return nextDate.Format("20060102"), nil
+	return nextDate.Format(DateFormat), nil
 }
 
 func nextDateWeek(now, nextDate time.Time, repeat string) (string, error) {
@@ -78,14 +78,14 @@ func nextDateWeek(now, nextDate time.Time, repeat string) (string, error) {
 			return "", fmt.Errorf("repeat is invalid")
 		}
 		if nowWeekday < day {
-			return nextDate.AddDate(0, 0, day-nowWeekday).Format("20060102"), nil
+			return nextDate.AddDate(0, 0, day-nowWeekday).Format(DateFormat), nil
 		}
 	}
 	firstDay, err := strconv.Atoi(daysRaw[0])
 	if err != nil {
 		return "", fmt.Errorf("repeat is invalid")
 	}
-	return nextDate.AddDate(0, 0, 7-nowWeekday+firstDay).Format("20060102"), nil
+	return nextDate.AddDate(0, 0, 7-nowWeekday+firstDay).Format(DateFormat), nil
 }
 
 func getDaysInMonth(repeatRaw string) ([]int, error) {
@@ -154,7 +154,7 @@ func nextDateMonth(now, nextDate time.Time, repeat string) (string, error) {
 				}
 				nextDate = time.Date(nextDate.Year(), nextDate.Month(), day, 0, 0, 0, 0, time.UTC)
 				if nextDate.After(now) {
-					return nextDate.Format("20060102"), nil
+					return nextDate.Format(DateFormat), nil
 				}
 			}
 			nextDate = nextDate.AddDate(0, 1, 0)
@@ -186,11 +186,11 @@ func nextDateMonth(now, nextDate time.Time, repeat string) (string, error) {
 				}
 				nextDate = time.Date(nextDate.Year(), time.Month(monthsRaw[i]), day, 0, 0, 0, 0, time.UTC)
 				if nextDate.After(now) {
-					return nextDate.Format("20060102"), nil
+					return nextDate.Format(DateFormat), nil
 				}
 			}
 		}
-		return time.Date(nextDate.Year()+1, time.Month(monthsRaw[0]), daysRaw[0], 0, 0, 0, 0, time.UTC).Format("20060102"), nil
+		return time.Date(nextDate.Year()+1, time.Month(monthsRaw[0]), daysRaw[0], 0, 0, 0, 0, time.UTC).Format(DateFormat), nil
 	}
 }
 
@@ -203,7 +203,7 @@ func nextDateYear(now, nextDate time.Time) (string, error) {
 	if count == 0 {
 		nextDate = nextDate.AddDate(1, 0, 0)
 	}
-	return nextDate.Format("20060102"), nil
+	return nextDate.Format(DateFormat), nil
 }
 
 func NextDate(now time.Time, date string, repeat string) (string, error) {
@@ -211,11 +211,7 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 		return "", fmt.Errorf("repeat is empty")
 	}
 
-	//if date == now.Format("20060102") && repeat == "d 1" {
-	//	return date, nil
-	//}
-
-	nextDate, err := time.Parse("20060102", date)
+	nextDate, err := time.Parse(DateFormat, date)
 	if err != nil {
 		return "", fmt.Errorf("date is invalid")
 	}

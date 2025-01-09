@@ -10,14 +10,21 @@ RUN go mod download
 
 COPY . .
 
+WORKDIR /app/config
+
 ENV TODO_PORT=7540
 ENV TODO_DBFILE=scheduler.db
 ENV TODO_PASSWORD=1234
+ENV CGO_ENABLED=0 
+ENV GOOS=linux 
+ENV GOARCH=amd64
 
-RUN go mod tidy 
+WORKDIR /app/cmd/practicum_final
 
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /practicum-final
+RUN CGO_ENABLED=${CGO_ENABLED} GOOS=${GOOS} GOARCH=${GOARCH} go build -o /practicum-final
 
-EXPOSE 7540
+EXPOSE ${TODO_PORT}
 
 CMD ["/practicum-final"]
+
+WORKDIR /app

@@ -26,7 +26,7 @@ func count(db *sqlx.DB) (int, error) {
 }
 
 func openDB(t *testing.T) *sqlx.DB {
-	err := godotenv.Load("../.env")
+	err := godotenv.Load("../config/.env")
 	assert.NoError(t, err)
 	//appPath, err := os.Executable()
 	if err != nil {

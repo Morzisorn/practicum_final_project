@@ -1,19 +1,21 @@
-package main
+package db
 
 import (
 	"database/sql"
 	"os"
 	"path/filepath"
 
+	"github.com/morzisorn/practicum_final_project/config"
 	"github.com/sirupsen/logrus"
+	_ "modernc.org/sqlite"
 )
 
 var (
-	db *sql.DB
+	DB *sql.DB
 )
 
 func createDBTables() {
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS scheduler (
+	_, err := DB.Exec(`CREATE TABLE IF NOT EXISTS scheduler (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		date VARCHAR(8),
 		title VARCHAR(255) NOT NULL,
@@ -24,7 +26,7 @@ func createDBTables() {
 		logrus.Fatal(err)
 	}
 
-	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_scheduler_date ON scheduler (date);`)
+	_, err = DB.Exec(`CREATE INDEX IF NOT EXISTS idx_scheduler_date ON scheduler (date);`)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -35,16 +37,16 @@ func RunDB() error {
 	if err != nil {
 		return err
 	}
-	filename := os.Getenv("TODO_DBFILE")
-	dbFile := filepath.Join(appPath, filename)
-	_, err = os.Stat(dbFile)
+
+	DBFile := filepath.Join(appPath, config.DBFilename)
+	_, err = os.Stat(DBFile)
 
 	var install bool
 	if err != nil {
 		install = true
 	}
 
-	db, err = sql.Open("sqlite3", dbFile)
+	DB, err = sql.Open("sqlite", DBFile)
 	if err != nil {
 		return err
 	}
@@ -56,10 +58,10 @@ func RunDB() error {
 }
 
 func CloseDB() {
-	if db != nil {
-		err := db.Close()
+	if DB != nil {
+		err := DB.Close()
 		if err != nil {
-			logrus.Fatalf("db close error: %v", err)
+			logrus.Fatalf("DB close error: %v", err)
 		}
 	}
 }
