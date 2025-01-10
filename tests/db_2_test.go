@@ -1,11 +1,13 @@
 package tests
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,10 +26,16 @@ func count(db *sqlx.DB) (int, error) {
 }
 
 func openDB(t *testing.T) *sqlx.DB {
+	err := godotenv.Load("../config/.env")
+	assert.NoError(t, err)
+	//appPath, err := os.Executable()
+	if err != nil {
+		assert.Fail(t, err.Error())
+	}
 	dbfile := DBFile
 	envFile := os.Getenv("TODO_DBFILE")
 	if len(envFile) > 0 {
-		dbfile = envFile
+		dbfile = fmt.Sprintf("../%s", envFile)
 	}
 	db, err := sqlx.Connect("sqlite3", dbfile)
 	assert.NoError(t, err)

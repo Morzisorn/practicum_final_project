@@ -26,7 +26,8 @@ func getURL(path string) string {
 }
 
 func getBody(path string) ([]byte, error) {
-	resp, err := http.Get(getURL(path))
+	url := getURL(path)
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
